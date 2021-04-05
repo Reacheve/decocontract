@@ -491,7 +491,7 @@ ACTION decocontract::clearall() {
 
 ACTION decocontract::setsettings(string hodl_symbol, uint8_t hodl_precision, name hodl_contract,
       string stake_symbol, uint8_t stake_precision, name stake_contract,
-      uint64_t apy, int max_bid_amount, int min_stake_days, int max_stake_days,
+      uint64_t apy, uint64_t max_bid_amount, int min_stake_days, int max_stake_days,
       uint64_t max_unwithdrawn_time, uint64_t percentage_share_to_distribute,
       int64_t double_reward_time, int early_withdraw_penalty, int referral_percentage, int having_a_referral_percentage) {
   
