@@ -66,9 +66,65 @@
             "fields": []
         },
         {
-            "name": "configs",
+            "name": "contconfig",
             "base": "",
             "fields": [
+                {
+                    "name": "hodl_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "hodl_contract",
+                    "type": "name"
+                },
+                {
+                    "name": "stake_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "stake_contract",
+                    "type": "name"
+                },
+                {
+                    "name": "apy",
+                    "type": "uint64"
+                },
+                {
+                    "name": "max_bid_amount",
+                    "type": "uint64"
+                },
+                {
+                    "name": "min_stake_days",
+                    "type": "int32"
+                },
+                {
+                    "name": "max_stake_days",
+                    "type": "int32"
+                },
+                {
+                    "name": "max_unwithdrawn_time",
+                    "type": "uint64"
+                },
+                {
+                    "name": "percentage_share_to_distribute",
+                    "type": "uint64"
+                },
+                {
+                    "name": "double_reward_time",
+                    "type": "int64"
+                },
+                {
+                    "name": "early_withdraw_penalty",
+                    "type": "int32"
+                },
+                {
+                    "name": "referral_percentage",
+                    "type": "int32"
+                },
+                {
+                    "name": "having_a_referral_percentage",
+                    "type": "int32"
+                },
                 {
                     "name": "freeze_level",
                     "type": "int32"
@@ -171,7 +227,7 @@
             ]
         },
         {
-            "name": "setconfigs",
+            "name": "setfreeze",
             "base": "",
             "fields": [
                 {
@@ -260,68 +316,6 @@
                 },
                 {
                     "name": "days",
-                    "type": "int32"
-                }
-            ]
-        },
-        {
-            "name": "settings",
-            "base": "",
-            "fields": [
-                {
-                    "name": "hodl_symbol",
-                    "type": "symbol"
-                },
-                {
-                    "name": "hodl_contract",
-                    "type": "name"
-                },
-                {
-                    "name": "stake_symbol",
-                    "type": "symbol"
-                },
-                {
-                    "name": "stake_contract",
-                    "type": "name"
-                },
-                {
-                    "name": "apy",
-                    "type": "uint64"
-                },
-                {
-                    "name": "max_bid_amount",
-                    "type": "uint64"
-                },
-                {
-                    "name": "min_stake_days",
-                    "type": "int32"
-                },
-                {
-                    "name": "max_stake_days",
-                    "type": "int32"
-                },
-                {
-                    "name": "max_unwithdrawn_time",
-                    "type": "uint64"
-                },
-                {
-                    "name": "percentage_share_to_distribute",
-                    "type": "uint64"
-                },
-                {
-                    "name": "double_reward_time",
-                    "type": "int64"
-                },
-                {
-                    "name": "early_withdraw_penalty",
-                    "type": "int32"
-                },
-                {
-                    "name": "referral_percentage",
-                    "type": "int32"
-                },
-                {
-                    "name": "having_a_referral_percentage",
                     "type": "int32"
                 }
             ]
@@ -443,9 +437,9 @@
             "ricardian_contract": "Every user on the platform must be registered to use the platform. This action adds the registering account to the respective table"
         },
         {
-            "name": "setconfigs",
-            "type": "setconfigs",
-            "ricardian_contract": "Set the value of the variables in the singleton called configs"
+            "name": "setfreeze",
+            "type": "setfreeze",
+            "ricardian_contract": "Set the freeze level"
         },
         {
             "name": "setsettings",
@@ -472,8 +466,8 @@
             "key_types": []
         },
         {
-            "name": "configs",
-            "type": "configs",
+            "name": "contconfig",
+            "type": "contconfig",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
@@ -495,13 +489,6 @@
         {
             "name": "reginfo",
             "type": "registration_info",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
-        {
-            "name": "settings",
-            "type": "settings",
             "index_type": "i64",
             "key_names": [],
             "key_types": []

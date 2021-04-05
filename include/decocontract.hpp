@@ -13,7 +13,7 @@ CONTRACT decocontract : public contract {
     using contract::contract;
 
     decocontract(name receiver, name code, datastream<const char*> ds) : contract(receiver, code, ds),
-      _settings(receiver, receiver.value), _configs(receiver, receiver.value), _biders(receiver, receiver.value), _stakers(receiver, receiver.value), _registrations(receiver, receiver.value),
+      _settings(receiver, receiver.value), _biders(receiver, receiver.value), _stakers(receiver, receiver.value), _registrations(receiver, receiver.value),
       _referrals(receiver, receiver.value), _tokens(receiver, receiver.value) {}
     
     ACTION registeruser(name user, uint32_t referral_id);
@@ -59,14 +59,14 @@ CONTRACT decocontract : public contract {
       uint64_t max_unwithdrawn_time, uint64_t percentage_share_to_distribute,
       int64_t double_reward_time, int early_withdraw_penalty, int referral_percentage, int having_a_referral_percentage);
 
-    ACTION setconfigs(int freeze_level);
+    ACTION setfreeze(int freeze_level);
 
     ACTION init();
 
   private:
 
     // Table to hold the settings of the smart contract
-    TABLE settings {
+    TABLE contconfig {
       symbol hodl_symbol;
       name hodl_contract;
       symbol stake_symbol;
@@ -81,15 +81,10 @@ CONTRACT decocontract : public contract {
       int early_withdraw_penalty;
       int referral_percentage;
       int having_a_referral_percentage;
-    } default_settings;
-    typedef singleton<name("details"),settings> settings_table;
-    settings_table _settings;
-
-    TABLE configs {
       int freeze_level;
-    } default_configs;
-    typedef singleton<name("configs"), configs> configs_table;
-    configs_table _configs;
+    } default_settings;
+    typedef singleton<name("contconfig"),contconfig> settings_table;
+    settings_table _settings;
 
     // Tabke to hold data about every bidder
     TABLE bider_info {

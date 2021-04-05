@@ -58,9 +58,9 @@ This action is used to clear all the tables
 
 Set the value of the variables in the singleton called settings
 
-<h1 class="contract">setconfigs</h1>
+<h1 class="contract">setfreeze</h1>
 
-Set the value of the variables in the singleton called configs
+Set the freeze level
 
 <h1 class="contract">init</h1>
 

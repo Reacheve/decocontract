@@ -154,7 +154,7 @@ void decocontract::distribute(eosio::asset quantity) {
 ACTION decocontract::registeruser(name user, uint32_t referral_id) {
   require_auth(user);
 
-  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
 
   // Account can be registered only once
   auto reg = _registrations.get_index<name("secid")>();
@@ -186,7 +186,7 @@ void decocontract::bid(name hodler, name to, eosio::asset quantity, std::string 
   if(hodler == get_self() || memo == "IGNORE_THIS" || memo == "Jungle Faucet")
     return;
 
-  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
 
   check(_settings.get().hodl_contract == get_first_receiver(), "This contract is not accepted for bidding");
 
@@ -231,7 +231,7 @@ void decocontract::stake(name staker, name to, eosio::asset quantity, std::strin
   if(staker == get_self() || memo == "IGNORE_THIS")
     return;
 
-  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
 
   check(_settings.get().stake_contract == get_first_receiver(), "This contract is not accepted for staking");
 
@@ -261,7 +261,7 @@ ACTION decocontract::reducestake(name staker, eosio::asset quantity) {
 
   require_auth(staker);
 
-  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
 
   auto iterator = _tokens.find(staker.value);
 
@@ -296,7 +296,7 @@ ACTION decocontract::setstake(name staker, int days) {
 
   require_auth(staker);
 
-  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
 
   check(days >= _settings.get().min_stake_days, "Staking days is less the minimum staking period");
   check(days < _settings.get().max_stake_days, "Staking days is more that maximum staking period");
@@ -323,7 +323,7 @@ ACTION decocontract::givedivident(uint32_t key) {
   // Only the account owning the contract can give the divident
   require_auth(get_self());
 
-  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
 
   auto iterator = _stakers.find(key);
   check(iterator != _stakers.end(), "the given key is not in the stakers table");
@@ -364,7 +364,7 @@ ACTION decocontract::cancelstake(name staker, uint32_t key) {
 
   require_auth(staker);
 
-  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
 
   auto iterator = _stakers.find(key);
   check(iterator != _stakers.end(), "the given key is not in the stakers table");
@@ -395,7 +395,7 @@ ACTION decocontract::withdrawstake(name staker, uint32_t key) {
 
   require_auth(staker);
 
-  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
 
   auto iterator = _stakers.find(key);
   check(iterator != _stakers.end(), "the given key is not in the stakers table");
@@ -425,7 +425,7 @@ ACTION decocontract::distanddiv(eosio::asset supply) {
 
   require_auth(get_self());
 
-  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
   
   distdivident();
   distribute(supply);
@@ -516,12 +516,12 @@ ACTION decocontract::setsettings(string hodl_symbol, uint8_t hodl_precision, nam
  
 }
 
-ACTION decocontract::setconfigs(int freeze_level) {
+ACTION decocontract::setfreeze(int freeze_level) {
   require_auth(get_self());
 
-  auto configs_stored = _configs.get_or_create( get_self(), default_configs );
+  auto configs_stored = _settings.get_or_create( get_self(), default_settings );
   configs_stored.freeze_level = freeze_level;
-  _configs.set(configs_stored, get_self());
+  _settings.set(configs_stored, get_self());
 
 }
 
@@ -545,11 +545,9 @@ ACTION decocontract::init() {
   settings_stored.early_withdraw_penalty = 80;
   settings_stored.referral_percentage = 10;
   settings_stored.having_a_referral_percentage = 5;
+  settings_stored.freeze_level = 0;
   _settings.set(settings_stored, get_self());
 
-  auto configs_stored = _configs.get_or_create( get_self(), default_configs );
-  configs_stored.freeze_level = 0;
-  _configs.set(configs_stored, get_self());
 
 }
 
