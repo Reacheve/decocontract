@@ -54,9 +54,9 @@ This action is used to clear the reference table
 
 This action is used to clear all the tables
 
-<h1 class="contract">setsettings</h1>
+<h1 class="contract">setconfig</h1>
 
-Set the value of the variables in the singleton called settings
+Set the value of the variables in the configuration table
 
 <h1 class="contract">setfreeze</h1>
 

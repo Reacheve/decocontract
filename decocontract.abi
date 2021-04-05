@@ -227,17 +227,7 @@
             ]
         },
         {
-            "name": "setfreeze",
-            "base": "",
-            "fields": [
-                {
-                    "name": "freeze_level",
-                    "type": "int32"
-                }
-            ]
-        },
-        {
-            "name": "setsettings",
+            "name": "setconfig",
             "base": "",
             "fields": [
                 {
@@ -302,6 +292,16 @@
                 },
                 {
                     "name": "having_a_referral_percentage",
+                    "type": "int32"
+                }
+            ]
+        },
+        {
+            "name": "setfreeze",
+            "base": "",
+            "fields": [
+                {
+                    "name": "freeze_level",
                     "type": "int32"
                 }
             ]
@@ -437,14 +437,14 @@
             "ricardian_contract": "Every user on the platform must be registered to use the platform. This action adds the registering account to the respective table"
         },
         {
+            "name": "setconfig",
+            "type": "setconfig",
+            "ricardian_contract": "Set the value of the variables in the configuration table"
+        },
+        {
             "name": "setfreeze",
             "type": "setfreeze",
             "ricardian_contract": "Set the freeze level"
-        },
-        {
-            "name": "setsettings",
-            "type": "setsettings",
-            "ricardian_contract": "Set the value of the variables in the singleton called settings"
         },
         {
             "name": "setstake",

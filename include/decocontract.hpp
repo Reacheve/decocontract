@@ -13,7 +13,7 @@ CONTRACT decocontract : public contract {
     using contract::contract;
 
     decocontract(name receiver, name code, datastream<const char*> ds) : contract(receiver, code, ds),
-      _settings(receiver, receiver.value), _biders(receiver, receiver.value), _stakers(receiver, receiver.value), _registrations(receiver, receiver.value),
+      _config(receiver, receiver.value), _biders(receiver, receiver.value), _stakers(receiver, receiver.value), _registrations(receiver, receiver.value),
       _referrals(receiver, receiver.value), _tokens(receiver, receiver.value) {}
     
     ACTION registeruser(name user, uint32_t referral_id);
@@ -53,7 +53,7 @@ CONTRACT decocontract : public contract {
     ACTION clearall();
 
     // The action to set the settings variable
-    ACTION setsettings(string hodl_symbol, uint8_t hodl_precision, name hodl_contract,
+    ACTION setconfig(string hodl_symbol, uint8_t hodl_precision, name hodl_contract,
       string stake_symbol, uint8_t stake_precision, name stake_contract,
       uint64_t apy, uint64_t max_bid_amount, int min_stake_days, int max_stake_days,
       uint64_t max_unwithdrawn_time, uint64_t percentage_share_to_distribute,
@@ -82,9 +82,9 @@ CONTRACT decocontract : public contract {
       int referral_percentage;
       int having_a_referral_percentage;
       int freeze_level;
-    } default_settings;
-    typedef singleton<name("contconfig"),contconfig> settings_table;
-    settings_table _settings;
+    } default_config;
+    typedef singleton<name("contconfig"),contconfig> config_table;
+    config_table _config;
 
     // Tabke to hold data about every bidder
     TABLE bider_info {

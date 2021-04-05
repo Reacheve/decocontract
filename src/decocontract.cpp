@@ -10,7 +10,7 @@ int64_t decocontract::total_bidded_tokens_to_distribute() {
     iterator++;
   }
 
-  int64_t tokens_to_distribute = (_settings.get().percentage_share_to_distribute * total_token_received) / 100;
+  int64_t tokens_to_distribute = (_config.get().percentage_share_to_distribute * total_token_received) / 100;
 
   return tokens_to_distribute;
 }
@@ -36,10 +36,10 @@ int64_t decocontract::interest_to_give(int64_t amt, int no_of_days, int maturity
   if(no_of_days > maturity_days)
     no_of_days = maturity_days;
 
-  int64_t interest = (amt * _settings.get().apy * no_of_days) / (365 * 100);
+  int64_t interest = (amt * _config.get().apy * no_of_days) / (365 * 100);
 
   // The interest double at regular time interval
-  int64_t extra_interest = ((no_of_days / _settings.get().double_reward_time) * _settings.get().apy * amt) / (365 * 100);
+  int64_t extra_interest = ((no_of_days / _config.get().double_reward_time) * _config.get().apy * amt) / (365 * 100);
 
   return (interest + extra_interest);
 }
@@ -67,7 +67,7 @@ void decocontract::distdivident() {
           std::make_tuple(
             get_self(),
             iterator->staker,
-            eosio::asset(tokens_to_give, _settings.get().hodl_symbol),
+            eosio::asset(tokens_to_give, _config.get().hodl_symbol),
             std::string("Giving Divident")
           )
         }.send();
@@ -75,7 +75,7 @@ void decocontract::distdivident() {
     }
 
     // Clear the records after max_unwithdrawn_time
-    if(iterator->days_passed > (iterator->staked_days + _settings.get().max_unwithdrawn_time))
+    if(iterator->days_passed > (iterator->staked_days + _config.get().max_unwithdrawn_time))
       _stakers.erase(iterator);
     else {
     
@@ -111,7 +111,7 @@ void decocontract::distribute(eosio::asset quantity) {
     int64_t tokens_to_send = (iterator->bid * quantity.amount)/total_bid;
     check(tokens_to_send > 0, "tokens to send is not greater than 0");
     
-    int64_t referral_share = (_settings.get().referral_percentage * tokens_to_send) / 100;
+    int64_t referral_share = (_config.get().referral_percentage * tokens_to_send) / 100;
 
     if((iterator->referrer.length() > 0) && (referral_share > 0)) {
     
@@ -129,7 +129,7 @@ void decocontract::distribute(eosio::asset quantity) {
       }.send();
 
       // Calculating the extra commission for having a referrer
-      int64_t extra = (_settings.get().having_a_referral_percentage * tokens_to_send) / 100;
+      int64_t extra = (_config.get().having_a_referral_percentage * tokens_to_send) / 100;
       tokens_to_send = tokens_to_send + extra;
     }
 
@@ -154,7 +154,7 @@ void decocontract::distribute(eosio::asset quantity) {
 ACTION decocontract::registeruser(name user, uint32_t referral_id) {
   require_auth(user);
 
-  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_config.get().freeze_level == 0, "contract under freeze for maintainance");
 
   // Account can be registered only once
   auto reg = _registrations.get_index<name("secid")>();
@@ -186,13 +186,13 @@ void decocontract::bid(name hodler, name to, eosio::asset quantity, std::string 
   if(hodler == get_self() || memo == "IGNORE_THIS" || memo == "Jungle Faucet")
     return;
 
-  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_config.get().freeze_level == 0, "contract under freeze for maintainance");
 
-  check(_settings.get().hodl_contract == get_first_receiver(), "This contract is not accepted for bidding");
+  check(_config.get().hodl_contract == get_first_receiver(), "This contract is not accepted for bidding");
 
   check(quantity.amount > 0, "quantity must be greater than 0");
-  check(quantity.amount <= _settings.get().max_bid_amount, "more than max bid limit");
-  check(quantity.symbol == _settings.get().hodl_symbol, "cant bid with this token");
+  check(quantity.amount <= _config.get().max_bid_amount, "more than max bid limit");
+  check(quantity.symbol == _config.get().hodl_symbol, "cant bid with this token");
 
   // Only registered account can bid
   auto reg = _registrations.get_index<name("secid")>();
@@ -231,9 +231,9 @@ void decocontract::stake(name staker, name to, eosio::asset quantity, std::strin
   if(staker == get_self() || memo == "IGNORE_THIS")
     return;
 
-  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_config.get().freeze_level == 0, "contract under freeze for maintainance");
 
-  check(_settings.get().stake_contract == get_first_receiver(), "This contract is not accepted for staking");
+  check(_config.get().stake_contract == get_first_receiver(), "This contract is not accepted for staking");
 
   // Only registered account can stake
   auto reg = _registrations.get_index<name("secid")>();
@@ -241,7 +241,7 @@ void decocontract::stake(name staker, name to, eosio::asset quantity, std::strin
   check(reg_itr != reg.end(), "account is not registered");
 
   check(quantity.amount > 0, "staked amount must be greater than 0");
-  check(quantity.symbol == _settings.get().stake_symbol, "this token is not accepted for staking");
+  check(quantity.symbol == _config.get().stake_symbol, "this token is not accepted for staking");
 
   auto iterator = _tokens.find(staker.value);
   if(iterator == _tokens.end()) {
@@ -261,7 +261,7 @@ ACTION decocontract::reducestake(name staker, eosio::asset quantity) {
 
   require_auth(staker);
 
-  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_config.get().freeze_level == 0, "contract under freeze for maintainance");
 
   auto iterator = _tokens.find(staker.value);
 
@@ -296,10 +296,10 @@ ACTION decocontract::setstake(name staker, int days) {
 
   require_auth(staker);
 
-  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_config.get().freeze_level == 0, "contract under freeze for maintainance");
 
-  check(days >= _settings.get().min_stake_days, "Staking days is less the minimum staking period");
-  check(days < _settings.get().max_stake_days, "Staking days is more that maximum staking period");
+  check(days >= _config.get().min_stake_days, "Staking days is less the minimum staking period");
+  check(days < _config.get().max_stake_days, "Staking days is more that maximum staking period");
 
   auto iterator = _tokens.find(staker.value);
   check(iterator != _tokens.end(), "No pending stake is found");
@@ -323,7 +323,7 @@ ACTION decocontract::givedivident(uint32_t key) {
   // Only the account owning the contract can give the divident
   require_auth(get_self());
 
-  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_config.get().freeze_level == 0, "contract under freeze for maintainance");
 
   auto iterator = _stakers.find(key);
   check(iterator != _stakers.end(), "the given key is not in the stakers table");
@@ -340,14 +340,14 @@ ACTION decocontract::givedivident(uint32_t key) {
         std::make_tuple(
           get_self(),
           iterator->staker,
-          eosio::asset(tokens_to_give, _settings.get().hodl_symbol),
+          eosio::asset(tokens_to_give, _config.get().hodl_symbol),
           std::string("Giveing Divident")
         )
       }.send();
     }
   }
 
-  if(iterator->days_passed > iterator->staked_days + _settings.get().max_unwithdrawn_time) {
+  if(iterator->days_passed > iterator->staked_days + _config.get().max_unwithdrawn_time) {
     _stakers.erase(iterator);
     return;
   }
@@ -364,7 +364,7 @@ ACTION decocontract::cancelstake(name staker, uint32_t key) {
 
   require_auth(staker);
 
-  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_config.get().freeze_level == 0, "contract under freeze for maintainance");
 
   auto iterator = _stakers.find(key);
   check(iterator != _stakers.end(), "the given key is not in the stakers table");
@@ -372,7 +372,7 @@ ACTION decocontract::cancelstake(name staker, uint32_t key) {
   check(iterator->staked_days >= iterator->days_passed, "account is matured and can be withdrawn");
 
   // They are penalized for early withdrawal
-  int64_t amt_to_give = (((100 - _settings.get().early_withdraw_penalty) * iterator->staked_amount) / 100) + interest_to_give(iterator->staked_amount, iterator->days_passed, iterator->staked_days);
+  int64_t amt_to_give = (((100 - _config.get().early_withdraw_penalty) * iterator->staked_amount) / 100) + interest_to_give(iterator->staked_amount, iterator->days_passed, iterator->staked_days);
 
   check(amt_to_give > 0, "No token to withdraw");
 
@@ -383,7 +383,7 @@ ACTION decocontract::cancelstake(name staker, uint32_t key) {
     std::make_tuple(
       get_self(),
       staker,
-      eosio::asset(amt_to_give, _settings.get().stake_symbol),
+      eosio::asset(amt_to_give, _config.get().stake_symbol),
       std::string("Premature Withdraw of Stake")
     )
   }.send();
@@ -395,7 +395,7 @@ ACTION decocontract::withdrawstake(name staker, uint32_t key) {
 
   require_auth(staker);
 
-  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_config.get().freeze_level == 0, "contract under freeze for maintainance");
 
   auto iterator = _stakers.find(key);
   check(iterator != _stakers.end(), "the given key is not in the stakers table");
@@ -413,7 +413,7 @@ ACTION decocontract::withdrawstake(name staker, uint32_t key) {
     std::make_tuple(
       get_self(),
       staker,
-      eosio::asset(amt_to_give, _settings.get().stake_symbol),
+      eosio::asset(amt_to_give, _config.get().stake_symbol),
       std::string("Withdraw stake with interest")
     )
   }.send();
@@ -425,7 +425,7 @@ ACTION decocontract::distanddiv(eosio::asset supply) {
 
   require_auth(get_self());
 
-  check(_settings.get().freeze_level == 0, "contract under freeze for maintainance");
+  check(_config.get().freeze_level == 0, "contract under freeze for maintainance");
   
   distdivident();
   distribute(supply);
@@ -489,7 +489,7 @@ ACTION decocontract::clearall() {
   clearrefs();
 }
 
-ACTION decocontract::setsettings(string hodl_symbol, uint8_t hodl_precision, name hodl_contract,
+ACTION decocontract::setconfig(string hodl_symbol, uint8_t hodl_precision, name hodl_contract,
       string stake_symbol, uint8_t stake_precision, name stake_contract,
       uint64_t apy, uint64_t max_bid_amount, int min_stake_days, int max_stake_days,
       uint64_t max_unwithdrawn_time, uint64_t percentage_share_to_distribute,
@@ -497,31 +497,31 @@ ACTION decocontract::setsettings(string hodl_symbol, uint8_t hodl_precision, nam
   
   require_auth(get_self());
 
-  auto settings_stored = _settings.get_or_create( get_self(), default_settings );
-  settings_stored.hodl_symbol = eosio::symbol(hodl_symbol, hodl_precision);
-  settings_stored.hodl_contract = hodl_contract;
-  settings_stored.stake_symbol = eosio::symbol(stake_symbol, stake_precision);
-  settings_stored.stake_contract = stake_contract;
-  settings_stored.apy = apy;
-  settings_stored.max_bid_amount = max_bid_amount;
-  settings_stored.min_stake_days = min_stake_days;
-  settings_stored.max_stake_days = max_stake_days;
-  settings_stored.max_unwithdrawn_time = max_unwithdrawn_time;
-  settings_stored.percentage_share_to_distribute = percentage_share_to_distribute;
-  settings_stored.double_reward_time = double_reward_time;
-  settings_stored.early_withdraw_penalty = early_withdraw_penalty;
-  settings_stored.referral_percentage = referral_percentage;
-  settings_stored.having_a_referral_percentage = having_a_referral_percentage;
-  _settings.set(settings_stored, get_self());
+  auto config_stored = _config.get_or_create( get_self(), default_config );
+  config_stored.hodl_symbol = eosio::symbol(hodl_symbol, hodl_precision);
+  config_stored.hodl_contract = hodl_contract;
+  config_stored.stake_symbol = eosio::symbol(stake_symbol, stake_precision);
+  config_stored.stake_contract = stake_contract;
+  config_stored.apy = apy;
+  config_stored.max_bid_amount = max_bid_amount;
+  config_stored.min_stake_days = min_stake_days;
+  config_stored.max_stake_days = max_stake_days;
+  config_stored.max_unwithdrawn_time = max_unwithdrawn_time;
+  config_stored.percentage_share_to_distribute = percentage_share_to_distribute;
+  config_stored.double_reward_time = double_reward_time;
+  config_stored.early_withdraw_penalty = early_withdraw_penalty;
+  config_stored.referral_percentage = referral_percentage;
+  config_stored.having_a_referral_percentage = having_a_referral_percentage;
+  _config.set(config_stored, get_self());
  
 }
 
 ACTION decocontract::setfreeze(int freeze_level) {
   require_auth(get_self());
 
-  auto configs_stored = _settings.get_or_create( get_self(), default_settings );
+  auto configs_stored = _config.get_or_create( get_self(), default_config );
   configs_stored.freeze_level = freeze_level;
-  _settings.set(configs_stored, get_self());
+  _config.set(configs_stored, get_self());
 
 }
 
@@ -530,23 +530,23 @@ ACTION decocontract::init() {
   require_auth(get_self());
 
   // Setting default value to settings table
-  auto settings_stored = _settings.get_or_create( get_self(), default_settings );
-  settings_stored.hodl_symbol = eosio::symbol("EOS", 4);
-  settings_stored.hodl_contract = eosio::name("eosio.token");
-  settings_stored.stake_symbol = eosio::symbol("DECO", 4);
-  settings_stored.stake_contract = eosio::name("destinytoken");
-  settings_stored.apy = 5;
-  settings_stored.max_bid_amount = 1000000;
-  settings_stored.min_stake_days = 1;
-  settings_stored.max_stake_days = 100;
-  settings_stored.max_unwithdrawn_time = 100;
-  settings_stored.percentage_share_to_distribute = 95;
-  settings_stored.double_reward_time = 5;
-  settings_stored.early_withdraw_penalty = 80;
-  settings_stored.referral_percentage = 10;
-  settings_stored.having_a_referral_percentage = 5;
-  settings_stored.freeze_level = 0;
-  _settings.set(settings_stored, get_self());
+  auto config_stored = _config.get_or_create( get_self(), default_config );
+  config_stored.hodl_symbol = eosio::symbol("EOS", 4);
+  config_stored.hodl_contract = eosio::name("eosio.token");
+  config_stored.stake_symbol = eosio::symbol("DECO", 4);
+  config_stored.stake_contract = eosio::name("destinytoken");
+  config_stored.apy = 5;
+  config_stored.max_bid_amount = 1000000;
+  config_stored.min_stake_days = 1;
+  config_stored.max_stake_days = 100;
+  config_stored.max_unwithdrawn_time = 100;
+  config_stored.percentage_share_to_distribute = 95;
+  config_stored.double_reward_time = 5;
+  config_stored.early_withdraw_penalty = 80;
+  config_stored.referral_percentage = 10;
+  config_stored.having_a_referral_percentage = 5;
+  config_stored.freeze_level = 0;
+  _config.set(config_stored, get_self());
 
 
 }
