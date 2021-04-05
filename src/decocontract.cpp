@@ -1,26 +1,5 @@
 #include <decocontract.hpp>
 
-int64_t decocontract::per_token_rate(int64_t total_supply) {
-
-  // total_supply = total_supply * 10000;
-
-  int64_t total_bid = 0;
-
-  auto iterator = _biders.begin();
-  while(iterator != _biders.end()) {
-    total_bid = total_bid + (iterator->bid);
-    iterator++;
-  }
-
-  print("total_spply => ", total_supply);
-  print("total_bid => ", total_bid);
-
-  if(total_bid > 0)
-    return (total_supply / total_bid);
-  else
-    return 0;
-}
-
 int64_t decocontract::total_bidded_tokens_to_distribute() {
 
   int64_t total_token_received = 0;
@@ -117,17 +96,19 @@ void decocontract::distribute(eosio::asset quantity) {
   // Only the account containing the contract can distribute
   require_auth(get_self());
 
-  print("quantity => ", quantity.amount);
+  // Calculate the total bid
+  int64_t total_bid = 0;
 
-  // Rate
-  int64_t rate = per_token_rate(quantity.amount);
-
-  print("rate => ", rate);
+  auto itr = _biders.begin();
+  while(itr != _biders.end()) {
+    total_bid = total_bid + (itr->bid);
+    itr++;
+  }
 
   auto iterator = _biders.begin();
   while(iterator != _biders.end()) {
 
-    int64_t tokens_to_send = iterator->bid * rate;
+    int64_t tokens_to_send = (iterator->bid * quantity.amount)/total_bid;
     check(tokens_to_send > 0, "tokens to send is not greater than 0");
     
     int64_t referral_share = (_settings.get().referral_percentage * tokens_to_send) / 100;
@@ -173,6 +154,8 @@ void decocontract::distribute(eosio::asset quantity) {
 ACTION decocontract::registeruser(name user, uint32_t referral_id) {
   require_auth(user);
 
+  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+
   // Account can be registered only once
   auto reg = _registrations.get_index<name("secid")>();
   auto reg_itr = reg.find(user.value);
@@ -196,12 +179,16 @@ ACTION decocontract::registeruser(name user, uint32_t referral_id) {
   });
 }
 
-[[eosio::on_notify("eosio.token::transfer")]]
+[[eosio::on_notify("*::transfer")]]
 void decocontract::bid(name hodler, name to, eosio::asset quantity, std::string memo) {
 
   // Ignore when the smart contract is sending tokens and the memo is IGNORE_THIS
   if(hodler == get_self() || memo == "IGNORE_THIS" || memo == "Jungle Faucet")
     return;
+
+  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+
+  check(_settings.get().hodl_contract == get_first_receiver(), "This contract is not accepted for bidding");
 
   check(quantity.amount > 0, "quantity must be greater than 0");
   check(quantity.amount <= _settings.get().max_bid_amount, "more than max bid limit");
@@ -237,12 +224,16 @@ void decocontract::bid(name hodler, name to, eosio::asset quantity, std::string 
   }
 }
 
-[[eosio::on_notify("destinytoken::transfer")]]
+[[eosio::on_notify("*::transfer")]]
 void decocontract::stake(name staker, name to, eosio::asset quantity, std::string memo) {
 
   // Ignore when the contract is sending the tokens or the memo is IGNORE_THIS
   if(staker == get_self() || memo == "IGNORE_THIS")
     return;
+
+  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+
+  check(_settings.get().stake_contract == get_first_receiver(), "This contract is not accepted for staking");
 
   // Only registered account can stake
   auto reg = _registrations.get_index<name("secid")>();
@@ -269,6 +260,8 @@ void decocontract::stake(name staker, name to, eosio::asset quantity, std::strin
 ACTION decocontract::reducestake(name staker, eosio::asset quantity) {
 
   require_auth(staker);
+
+  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
 
   auto iterator = _tokens.find(staker.value);
 
@@ -302,6 +295,9 @@ ACTION decocontract::reducestake(name staker, eosio::asset quantity) {
 ACTION decocontract::setstake(name staker, int days) {
 
   require_auth(staker);
+
+  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+
   check(days >= _settings.get().min_stake_days, "Staking days is less the minimum staking period");
   check(days < _settings.get().max_stake_days, "Staking days is more that maximum staking period");
 
@@ -326,6 +322,8 @@ ACTION decocontract::givedivident(uint32_t key) {
 
   // Only the account owning the contract can give the divident
   require_auth(get_self());
+
+  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
 
   auto iterator = _stakers.find(key);
   check(iterator != _stakers.end(), "the given key is not in the stakers table");
@@ -366,6 +364,8 @@ ACTION decocontract::cancelstake(name staker, uint32_t key) {
 
   require_auth(staker);
 
+  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+
   auto iterator = _stakers.find(key);
   check(iterator != _stakers.end(), "the given key is not in the stakers table");
   check(iterator->staker == staker, "the account name doesn't match with the staker name");
@@ -395,6 +395,8 @@ ACTION decocontract::withdrawstake(name staker, uint32_t key) {
 
   require_auth(staker);
 
+  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+
   auto iterator = _stakers.find(key);
   check(iterator != _stakers.end(), "the given key is not in the stakers table");
   check(iterator->staker == staker, "the account name doesn't match with the staker name");
@@ -423,6 +425,8 @@ ACTION decocontract::distanddiv(eosio::asset supply) {
 
   require_auth(get_self());
 
+  check(_configs.get().freeze_level == 0, "contract under freeze for maintainance");
+  
   distdivident();
   distribute(supply);
 
@@ -485,11 +489,19 @@ ACTION decocontract::clearall() {
   clearrefs();
 }
 
-ACTION decocontract::setsettings(uint64_t apy, int max_bid_amount, int min_stake_days, int max_stake_days, uint64_t max_unwithdrawn_time, uint64_t percentage_share_to_distribute, int64_t double_reward_time, int early_withdraw_penalty, int referral_percentage, int having_a_referral_percentage) {
+ACTION decocontract::setsettings(string hodl_symbol, uint8_t hodl_precision, name hodl_contract,
+      string stake_symbol, uint8_t stake_precision, name stake_contract,
+      uint64_t apy, int max_bid_amount, int min_stake_days, int max_stake_days,
+      uint64_t max_unwithdrawn_time, uint64_t percentage_share_to_distribute,
+      int64_t double_reward_time, int early_withdraw_penalty, int referral_percentage, int having_a_referral_percentage) {
   
   require_auth(get_self());
 
   auto settings_stored = _settings.get_or_create( get_self(), default_settings );
+  settings_stored.hodl_symbol = eosio::symbol(hodl_symbol, hodl_precision);
+  settings_stored.hodl_contract = hodl_contract;
+  settings_stored.stake_symbol = eosio::symbol(stake_symbol, stake_precision);
+  settings_stored.stake_contract = stake_contract;
   settings_stored.apy = apy;
   settings_stored.max_bid_amount = max_bid_amount;
   settings_stored.min_stake_days = min_stake_days;
@@ -502,6 +514,43 @@ ACTION decocontract::setsettings(uint64_t apy, int max_bid_amount, int min_stake
   settings_stored.having_a_referral_percentage = having_a_referral_percentage;
   _settings.set(settings_stored, get_self());
  
+}
+
+ACTION decocontract::setconfigs(int freeze_level) {
+  require_auth(get_self());
+
+  auto configs_stored = _configs.get_or_create( get_self(), default_configs );
+  configs_stored.freeze_level = freeze_level;
+  _configs.set(configs_stored, get_self());
+
+}
+
+ACTION decocontract::init() {
+
+  require_auth(get_self());
+
+  // Setting default value to settings table
+  auto settings_stored = _settings.get_or_create( get_self(), default_settings );
+  settings_stored.hodl_symbol = eosio::symbol("EOS", 4);
+  settings_stored.hodl_contract = eosio::name("eosio.token");
+  settings_stored.stake_symbol = eosio::symbol("DECO", 4);
+  settings_stored.stake_contract = eosio::name("destinytoken");
+  settings_stored.apy = 5;
+  settings_stored.max_bid_amount = 1000000;
+  settings_stored.min_stake_days = 1;
+  settings_stored.max_stake_days = 100;
+  settings_stored.max_unwithdrawn_time = 100;
+  settings_stored.percentage_share_to_distribute = 95;
+  settings_stored.double_reward_time = 5;
+  settings_stored.early_withdraw_penalty = 80;
+  settings_stored.referral_percentage = 10;
+  settings_stored.having_a_referral_percentage = 5;
+  _settings.set(settings_stored, get_self());
+
+  auto configs_stored = _configs.get_or_create( get_self(), default_configs );
+  configs_stored.freeze_level = 0;
+  _configs.set(configs_stored, get_self());
+
 }
 
 // EOSIO_DISPATCH(decocontract, (registeruser)(reducestake)(setstake)(givedivident)(cancelstake)(withdrawstake)(distanddiv)(clearbiders)(clearstakers)(cleartokens)(clearregistr)(clearrefs)(clearall)(setsettings))

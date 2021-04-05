@@ -3,6 +3,7 @@
 #include <eosio/system.hpp>
 #include <eosio/time.hpp>
 #include <eosio/singleton.hpp>
+#include <eosio/transaction.hpp>
 
 using namespace std;
 using namespace eosio;
@@ -12,35 +13,17 @@ CONTRACT decocontract : public contract {
     using contract::contract;
 
     decocontract(name receiver, name code, datastream<const char*> ds) : contract(receiver, code, ds),
-      _settings(receiver, receiver.value), _biders(receiver, receiver.value), _stakers(receiver, receiver.value), _registrations(receiver, receiver.value),
-      _referrals(receiver, receiver.value), _tokens(receiver, receiver.value) {
-
-        // Setting default value to settings table
-        auto settings_stored = _settings.get_or_create( get_self(), default_settings );
-        settings_stored.hodl_symbol = eosio::symbol("EOS", 4);
-        settings_stored.stake_symbol = eosio::symbol("DECO", 4);
-        settings_stored.apy = 5;
-        settings_stored.max_bid_amount = 1000000;
-        settings_stored.min_stake_days = 1;
-        settings_stored.max_stake_days = 100;
-        settings_stored.max_unwithdrawn_time = 100;
-        settings_stored.percentage_share_to_distribute = 95;
-        settings_stored.double_reward_time = 5;
-        settings_stored.early_withdraw_penalty = 80;
-        settings_stored.referral_percentage = 10;
-        settings_stored.having_a_referral_percentage = 5;
-        _settings.set(settings_stored, get_self());
-
-      }
+      _settings(receiver, receiver.value), _configs(receiver, receiver.value), _biders(receiver, receiver.value), _stakers(receiver, receiver.value), _registrations(receiver, receiver.value),
+      _referrals(receiver, receiver.value), _tokens(receiver, receiver.value) {}
     
     ACTION registeruser(name user, uint32_t referral_id);
     
     // Inline action used to store the bid
-    [[eosio::on_notify("eosio.token::transfer")]]
+    [[eosio::on_notify("*::transfer")]]
     void bid(name hodler, name to, eosio::asset quantity, std::string memo);
 
     // The inline action that receives the send asset and stores it for future claim
-    [[eosio::on_notify("destinytoken::transfer")]]
+    [[eosio::on_notify("*::transfer")]]
     void stake(name staker, name to, eosio::asset quantity, std::string memo);
 
     // Reduce the amount of stake in pending state
@@ -70,14 +53,24 @@ CONTRACT decocontract : public contract {
     ACTION clearall();
 
     // The action to set the settings variable
-    ACTION setsettings(uint64_t apy, int max_bid_amount, int min_stake_days, int max_stake_days, uint64_t max_unwithdrawn_time, uint64_t percentage_share_to_distribute, int64_t double_reward_time, int early_withdraw_penalty, int referral_percentage, int having_a_referral_percentage);
+    ACTION setsettings(string hodl_symbol, uint8_t hodl_precision, name hodl_contract,
+      string stake_symbol, uint8_t stake_precision, name stake_contract,
+      uint64_t apy, int max_bid_amount, int min_stake_days, int max_stake_days,
+      uint64_t max_unwithdrawn_time, uint64_t percentage_share_to_distribute,
+      int64_t double_reward_time, int early_withdraw_penalty, int referral_percentage, int having_a_referral_percentage);
+
+    ACTION setconfigs(int freeze_level);
+
+    ACTION init();
 
   private:
 
     // Table to hold the settings of the smart contract
     TABLE settings {
       symbol hodl_symbol;
+      name hodl_contract;
       symbol stake_symbol;
+      name stake_contract;
       uint64_t apy;
       int max_bid_amount;
       int min_stake_days;
@@ -91,6 +84,12 @@ CONTRACT decocontract : public contract {
     } default_settings;
     typedef singleton<name("settings"),settings> settings_table;
     settings_table _settings;
+
+    TABLE configs {
+      int freeze_level;
+    } default_configs;
+    typedef singleton<name("configs"), configs> configs_table;
+    configs_table _configs;
 
     // Tabke to hold data about every bidder
     TABLE bider_info {

@@ -66,6 +66,16 @@
             "fields": []
         },
         {
+            "name": "configs",
+            "base": "",
+            "fields": [
+                {
+                    "name": "freeze_level",
+                    "type": "int32"
+                }
+            ]
+        },
+        {
             "name": "distanddiv",
             "base": "",
             "fields": [
@@ -84,6 +94,11 @@
                     "type": "uint32"
                 }
             ]
+        },
+        {
+            "name": "init",
+            "base": "",
+            "fields": []
         },
         {
             "name": "messages",
@@ -156,9 +171,43 @@
             ]
         },
         {
+            "name": "setconfigs",
+            "base": "",
+            "fields": [
+                {
+                    "name": "freeze_level",
+                    "type": "int32"
+                }
+            ]
+        },
+        {
             "name": "setsettings",
             "base": "",
             "fields": [
+                {
+                    "name": "hodl_symbol",
+                    "type": "string"
+                },
+                {
+                    "name": "hodl_precision",
+                    "type": "uint8"
+                },
+                {
+                    "name": "hodl_contract",
+                    "type": "name"
+                },
+                {
+                    "name": "stake_symbol",
+                    "type": "string"
+                },
+                {
+                    "name": "stake_precision",
+                    "type": "uint8"
+                },
+                {
+                    "name": "stake_contract",
+                    "type": "name"
+                },
                 {
                     "name": "apy",
                     "type": "uint64"
@@ -224,8 +273,16 @@
                     "type": "symbol"
                 },
                 {
+                    "name": "hodl_contract",
+                    "type": "name"
+                },
+                {
                     "name": "stake_symbol",
                     "type": "symbol"
+                },
+                {
+                    "name": "stake_contract",
+                    "type": "name"
                 },
                 {
                     "name": "apy",
@@ -371,6 +428,11 @@
             "ricardian_contract": "This action is used to give divident to a particular account"
         },
         {
+            "name": "init",
+            "type": "init",
+            "ricardian_contract": "Initialize the singleton tables present"
+        },
+        {
             "name": "reducestake",
             "type": "reducestake",
             "ricardian_contract": "This action is used to reduce the staked token before it is claimed."
@@ -379,6 +441,11 @@
             "name": "registeruser",
             "type": "registeruser",
             "ricardian_contract": "Every user on the platform must be registered to use the platform. This action adds the registering account to the respective table"
+        },
+        {
+            "name": "setconfigs",
+            "type": "setconfigs",
+            "ricardian_contract": "Set the value of the variables in the singleton called configs"
         },
         {
             "name": "setsettings",
@@ -400,6 +467,13 @@
         {
             "name": "biderinfo",
             "type": "bider_info",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "configs",
+            "type": "configs",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
