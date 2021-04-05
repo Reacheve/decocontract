@@ -4,8 +4,8 @@ int64_t decocontract::total_bidded_tokens_to_distribute() {
 
   int64_t total_token_received = 0;
 
-  auto iterator = _biders.begin();
-  while(iterator != _biders.end()) {
+  auto iterator = _bidders.begin();
+  while(iterator != _bidders.end()) {
     total_token_received = total_token_received + (iterator->bid);
     iterator++;
   }
@@ -68,7 +68,7 @@ void decocontract::distdivident() {
             get_self(),
             iterator->staker,
             eosio::asset(tokens_to_give, _config.get().hodl_symbol),
-            std::string("Giving Divident")
+            std::string("Giving Dividend")
           )
         }.send();
       }
@@ -99,14 +99,14 @@ void decocontract::distribute(eosio::asset quantity) {
   // Calculate the total bid
   int64_t total_bid = 0;
 
-  auto itr = _biders.begin();
-  while(itr != _biders.end()) {
+  auto itr = _bidders.begin();
+  while(itr != _bidders.end()) {
     total_bid = total_bid + (itr->bid);
     itr++;
   }
 
-  auto iterator = _biders.begin();
-  while(iterator != _biders.end()) {
+  auto iterator = _bidders.begin();
+  while(iterator != _bidders.end()) {
 
     int64_t tokens_to_send = (iterator->bid * quantity.amount)/total_bid;
     check(tokens_to_send > 0, "tokens to send is not greater than 0");
@@ -140,14 +140,14 @@ void decocontract::distribute(eosio::asset quantity) {
         "transfer"_n,
         std::make_tuple(
           get_self(),
-          iterator->bidername,
+          iterator->biddername,
           eosio::asset(tokens_to_send, quantity.symbol),
           std::string("Delegated Tokens + Bonus if any")
         )
       }.send(); 
     }
 
-    iterator = _biders.erase(iterator);
+    iterator = _bidders.erase(iterator);
   }
 }
 
@@ -205,19 +205,19 @@ void decocontract::bid(name hodler, name to, eosio::asset quantity, std::string 
   if(ref != _referrals.end())
     referrer_account = ref->referrer.to_string();
 
-  auto iterator = _biders.find(hodler.value);
+  auto iterator = _bidders.find(hodler.value);
 
-  if(iterator == _biders.end()) {
+  if(iterator == _bidders.end()) {
     // No previous bid record
-    _biders.emplace(get_self(), [&](auto& row){
-      row.bidername = hodler;
+    _bidders.emplace(get_self(), [&](auto& row){
+      row.biddername = hodler;
       row.bid = quantity.amount;
       row.referrer = referrer_account;
     });
   } else {
     // Previous bid was made
-    _biders.modify(iterator, get_self(), [&](auto& row){
-      row.bidername = hodler;
+    _bidders.modify(iterator, get_self(), [&](auto& row){
+      row.biddername = hodler;
       row.bid = row.bid + quantity.amount;
       row.referrer = referrer_account;
     });
@@ -318,7 +318,7 @@ ACTION decocontract::setstake(name staker, int days) {
   _tokens.erase(iterator);
 }
 
-ACTION decocontract::givedivident(uint32_t key) {
+ACTION decocontract::transferdiv(uint32_t key) {
 
   // Only the account owning the contract can give the divident
   require_auth(get_self());
@@ -341,7 +341,7 @@ ACTION decocontract::givedivident(uint32_t key) {
           get_self(),
           iterator->staker,
           eosio::asset(tokens_to_give, _config.get().hodl_symbol),
-          std::string("Giveing Divident")
+          std::string("Giving Dividend")
         )
       }.send();
     }
@@ -432,16 +432,16 @@ ACTION decocontract::distanddiv(eosio::asset supply) {
 
 }
 
-ACTION decocontract::clearbiders() {
+ACTION decocontract::clearbids() {
   
   require_auth(get_self());
 
-  auto iterator = _biders.begin();
-  while(iterator != _biders.end())
-    iterator = _biders.erase(iterator);
+  auto iterator = _bidders.begin();
+  while(iterator != _bidders.end())
+    iterator = _bidders.erase(iterator);
 }
 
-ACTION decocontract::clearstakers() {
+ACTION decocontract::clearstakes() {
   
   require_auth(get_self());
   
@@ -482,8 +482,8 @@ ACTION decocontract::clearall() {
   // Only the account containing the contract can call the clearall action
   require_auth(get_self());
 
-  clearbiders();
-  clearstakers();
+  clearbids();
+  clearstakes();
   cleartokens();
   clearregistr();
   clearrefs();
@@ -551,7 +551,7 @@ ACTION decocontract::init() {
 
 }
 
-// EOSIO_DISPATCH(decocontract, (registeruser)(reducestake)(setstake)(givedivident)(cancelstake)(withdrawstake)(distanddiv)(clearbiders)(clearstakers)(cleartokens)(clearregistr)(clearrefs)(clearall)(setsettings))
+// EOSIO_DISPATCH(decocontract, (registeruser)(reducestake)(setstake)(transferdiv)(cancelstake)(withdrawstake)(distanddiv)(clearbids)(clearstakers)(cleartokens)(clearregistr)(clearrefs)(clearall)(setsettings))
 
 
 

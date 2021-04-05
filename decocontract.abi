@@ -4,11 +4,11 @@
     "types": [],
     "structs": [
         {
-            "name": "bider_info",
+            "name": "bidder_info",
             "base": "",
             "fields": [
                 {
-                    "name": "bidername",
+                    "name": "biddername",
                     "type": "name"
                 },
                 {
@@ -41,7 +41,7 @@
             "fields": []
         },
         {
-            "name": "clearbiders",
+            "name": "clearbids",
             "base": "",
             "fields": []
         },
@@ -56,7 +56,7 @@
             "fields": []
         },
         {
-            "name": "clearstakers",
+            "name": "clearstakes",
             "base": "",
             "fields": []
         },
@@ -142,33 +142,9 @@
             ]
         },
         {
-            "name": "givedivident",
-            "base": "",
-            "fields": [
-                {
-                    "name": "key",
-                    "type": "uint32"
-                }
-            ]
-        },
-        {
             "name": "init",
             "base": "",
             "fields": []
-        },
-        {
-            "name": "messages",
-            "base": "",
-            "fields": [
-                {
-                    "name": "user",
-                    "type": "name"
-                },
-                {
-                    "name": "text",
-                    "type": "string"
-                }
-            ]
         },
         {
             "name": "reducestake",
@@ -361,6 +337,16 @@
             ]
         },
         {
+            "name": "transferdiv",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "uint32"
+                }
+            ]
+        },
+        {
             "name": "withdrawstake",
             "base": "",
             "fields": [
@@ -387,8 +373,8 @@
             "ricardian_contract": "This action is used to clear all the tables"
         },
         {
-            "name": "clearbiders",
-            "type": "clearbiders",
+            "name": "clearbids",
+            "type": "clearbids",
             "ricardian_contract": "This action is used to clear the biders table"
         },
         {
@@ -402,8 +388,8 @@
             "ricardian_contract": "This action is used to clear the resistration table"
         },
         {
-            "name": "clearstakers",
-            "type": "clearstakers",
+            "name": "clearstakes",
+            "type": "clearstakes",
             "ricardian_contract": "This action is used to clear the stakers table"
         },
         {
@@ -415,11 +401,6 @@
             "name": "distanddiv",
             "type": "distanddiv",
             "ricardian_contract": "This action is called at the end of day and it distributes the daily share of divident as well as the share of tokens to be received after the bet"
-        },
-        {
-            "name": "givedivident",
-            "type": "givedivident",
-            "ricardian_contract": "This action is used to give divident to a particular account"
         },
         {
             "name": "init",
@@ -452,6 +433,11 @@
             "ricardian_contract": "This action locks the staked amount."
         },
         {
+            "name": "transferdiv",
+            "type": "transferdiv",
+            "ricardian_contract": "This action is used to give divident to a particular account"
+        },
+        {
             "name": "withdrawstake",
             "type": "withdrawstake",
             "ricardian_contract": "This action is used to withdraw the stake. This can be done only after maturity of the staked amount"
@@ -459,8 +445,8 @@
     ],
     "tables": [
         {
-            "name": "biderinfo",
-            "type": "bider_info",
+            "name": "bids",
+            "type": "bidder_info",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
@@ -473,35 +459,28 @@
             "key_types": []
         },
         {
-            "name": "messages",
-            "type": "messages",
-            "index_type": "i64",
-            "key_names": [],
-            "key_types": []
-        },
-        {
-            "name": "referralinfo",
+            "name": "refs",
             "type": "referral_info",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
         },
         {
-            "name": "reginfo",
+            "name": "registr",
             "type": "registration_info",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
         },
         {
-            "name": "stakerinfo",
+            "name": "stakes",
             "type": "staker_info",
             "index_type": "i64",
             "key_names": [],
             "key_types": []
         },
         {
-            "name": "tokensinfo",
+            "name": "tokens",
             "type": "tokens_info",
             "index_type": "i64",
             "key_names": [],

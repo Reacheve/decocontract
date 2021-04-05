@@ -14,7 +14,7 @@ This action is used to reduce the staked token before it is claimed.
 
 This action locks the staked amount.
 
-<h1 class="contract">givedivident</h1>
+<h1 class="contract">transferdiv</h1>
 
 This action is used to give divident to a particular account
 
@@ -30,11 +30,11 @@ This action is used to withdraw the stake. This can be done only after maturity 
 
 This action is called at the end of day and it distributes the daily share of divident as well as the share of tokens to be received after the bet
 
-<h1 class="contract">clearbiders</h1>
+<h1 class="contract">clearbids</h1>
 
 This action is used to clear the biders table
 
-<h1 class="contract">clearstakers</h1>
+<h1 class="contract">clearstakes</h1>
 
 This action is used to clear the stakers table
 

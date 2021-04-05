@@ -13,7 +13,7 @@ CONTRACT decocontract : public contract {
     using contract::contract;
 
     decocontract(name receiver, name code, datastream<const char*> ds) : contract(receiver, code, ds),
-      _config(receiver, receiver.value), _biders(receiver, receiver.value), _stakers(receiver, receiver.value), _registrations(receiver, receiver.value),
+      _config(receiver, receiver.value), _bidders(receiver, receiver.value), _stakers(receiver, receiver.value), _registrations(receiver, receiver.value),
       _referrals(receiver, receiver.value), _tokens(receiver, receiver.value) {}
     
     ACTION registeruser(name user, uint32_t referral_id);
@@ -33,7 +33,7 @@ CONTRACT decocontract : public contract {
     ACTION setstake(name staker, int days);
 
     // The action to give divident for specific acount from the pool of bid tokens collected
-    ACTION givedivident(uint32_t key);
+    ACTION transferdiv(uint32_t key);
 
     // The action to cancel the stake before maturity
     ACTION cancelstake(name staker, uint32_t key);
@@ -45,8 +45,8 @@ CONTRACT decocontract : public contract {
     ACTION distanddiv(eosio::asset quantity);
 
     // The actions to clear all table
-    ACTION clearbiders();
-    ACTION clearstakers();
+    ACTION clearbids();
+    ACTION clearstakes();
     ACTION cleartokens();
     ACTION clearregistr();
     ACTION clearrefs();
@@ -87,14 +87,14 @@ CONTRACT decocontract : public contract {
     config_table _config;
 
     // Tabke to hold data about every bidder
-    TABLE bider_info {
-      name bidername;
+    TABLE bidder_info {
+      name biddername;
       int64_t bid;
       string referrer;
-      auto primary_key() const { return bidername.value; }
+      auto primary_key() const { return biddername.value; }
     };
-    typedef eosio::multi_index<name("biderinfo"), bider_info> biders_table;
-    biders_table _biders;
+    typedef eosio::multi_index<name("bids"), bidder_info> bidders_table;
+    bidders_table _bidders;
 
     // Table to hold information about every staker
     TABLE staker_info {
@@ -107,7 +107,7 @@ CONTRACT decocontract : public contract {
       auto primary_key() const { return key; }
       uint64_t by_secondary() const { return staker.value; }
     };
-    typedef multi_index<name("stakerinfo"), staker_info, eosio::indexed_by<name("secid"), eosio::const_mem_fun<staker_info, uint64_t, &staker_info::by_secondary>>> stakers_table;
+    typedef multi_index<name("stakes"), staker_info, eosio::indexed_by<name("secid"), eosio::const_mem_fun<staker_info, uint64_t, &staker_info::by_secondary>>> stakers_table;
     stakers_table _stakers;
 
     // Table to store accounts which send tokens but not yet staked
@@ -117,7 +117,7 @@ CONTRACT decocontract : public contract {
 
       auto primary_key() const { return account_name.value; }
     };
-    typedef multi_index<name("tokensinfo"), tokens_info> tokens_table;
+    typedef multi_index<name("tokens"), tokens_info> tokens_table;
     tokens_table _tokens;
 
     // Table to store registered users
@@ -128,7 +128,7 @@ CONTRACT decocontract : public contract {
       auto primary_key() const { return key; }
       uint64_t by_secondary() const { return registrant.value; }
     };
-    typedef multi_index<name("reginfo"), registration_info, eosio::indexed_by<name("secid"), eosio::const_mem_fun<registration_info, uint64_t, &registration_info::by_secondary>>> registration_table;
+    typedef multi_index<name("registr"), registration_info, eosio::indexed_by<name("secid"), eosio::const_mem_fun<registration_info, uint64_t, &registration_info::by_secondary>>> registration_table;
     registration_table _registrations;
 
     // Table to store all the referrals
@@ -139,15 +139,8 @@ CONTRACT decocontract : public contract {
       auto primary_key() const { return referred_person.value; }
       uint64_t by_secondary() const { return referrer.value; }
     };
-    typedef multi_index<name("referralinfo"), referral_info, eosio::indexed_by<name("secid"), eosio::const_mem_fun<referral_info, uint64_t, &referral_info::by_secondary>>> referral_table;
+    typedef multi_index<name("refs"), referral_info, eosio::indexed_by<name("secid"), eosio::const_mem_fun<referral_info, uint64_t, &referral_info::by_secondary>>> referral_table;
     referral_table _referrals;
-
-    TABLE messages {
-      name    user;
-      string  text;
-      auto primary_key() const { return user.value; }
-    };
-    typedef multi_index<name("messages"), messages> messages_table;
 
     // Tokens to give for each bidded token
     int64_t per_token_rate(int64_t total_supply);
