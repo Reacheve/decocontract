@@ -186,6 +186,11 @@ void decocontract::bid(name hodler, name to, eosio::asset quantity, std::string 
   if(hodler == get_self() || memo == "IGNORE_THIS" || memo == "Jungle Faucet")
     return;
 
+  if(get_first_receiver() == _config.get().stake_contract) {
+    stake(hodler, to, quantity, memo);
+    return;
+  }
+
   check(_config.get().freeze_level == 0, "contract under freeze for maintainance");
 
   check(_config.get().hodl_contract == get_first_receiver(), "This contract is not accepted for bidding");
